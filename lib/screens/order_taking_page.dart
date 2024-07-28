@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:unilab_order_01/models/customer.dart';
 import 'package:unilab_order_01/models/purchase_order.dart';
@@ -358,15 +359,18 @@ class OrderTakingPageState extends State<OrderTakingPage> {
             children: [
               Autocomplete<Customer>(
                 optionsBuilder: (TextEditingValue textEditingValue) {
-                  return _customers
-                      .where((customer) => customer.fullName
-                          .toLowerCase()
-                          .contains(textEditingValue.text.toLowerCase()))
-                      .toList();
+                  if (textEditingValue.text.isEmpty) {
+                    return const Iterable<Customer>.empty();
+                  }
+                  return _customers.where((Customer customer) => customer
+                      .fullName
+                      .toLowerCase()
+                      .contains(textEditingValue.text.toLowerCase()));
                 },
                 displayStringForOption: (Customer customer) =>
                     customer.fullName,
                 onSelected: (Customer selectedCustomer) {
+                  _customerController.text = selectedCustomer.fullName;
                   setState(() {
                     _selectedCustomer = selectedCustomer;
                   });
@@ -380,8 +384,33 @@ class OrderTakingPageState extends State<OrderTakingPage> {
                     controller: controller,
                     focusNode: focusNode,
                     decoration: const InputDecoration(labelText: 'Customer'),
-                    onSubmitted: (value) {
-                      _addOrUpdateCustomer(value);
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp('[a-zA-Z ]')),
+                    ],
+                    onChanged: (String value) {
+                      if (_customers.any((customer) =>
+                          customer.fullName.toLowerCase() ==
+                          value.toLowerCase())) {
+                        setState(() {
+                          _selectedCustomer = _customers.firstWhere(
+                              (customer) =>
+                                  customer.fullName.toLowerCase() ==
+                                  value.toLowerCase());
+                        });
+                      } else {
+                        setState(() {
+                          _selectedCustomer = null;
+                        });
+                      }
+                    },
+                    onEditingComplete: () {
+                      if (!_customers.any((customer) =>
+                          customer.fullName.toLowerCase() ==
+                          controller.text.toLowerCase())) {
+                        setState(() {
+                          _selectedCustomer = null;
+                        });
+                      }
                       onEditingComplete();
                     },
                   );
