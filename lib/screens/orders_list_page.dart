@@ -34,7 +34,7 @@ class OrderPageState extends State<OrderPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Edit Order: ${_orders[index].customerId}'),
+          title: const Text('Edit Order'),
           content: CreateEditForm(
             initialOrder: _orders[index],
             onSave: (PurchaseOrder updatedOrder) async {
@@ -94,7 +94,7 @@ class OrderPageState extends State<OrderPage> {
                   ],
                   rows: _orders.map((order) {
                     return DataRow(cells: <DataCell>[
-                      DataCell(Text(order.customerId.toString())),
+                      DataCell(Text(order.id.toString())),
                       DataCell(Text(DateFormat('MM/dd/yyyy')
                           .format(order.dateOfDelivery))),
                       DataCell(Text(order.status)),
@@ -146,8 +146,8 @@ class CreateEditFormState extends State<CreateEditForm> {
   @override
   void initState() {
     super.initState();
-    _customerIdController = TextEditingController(
-        text: widget.initialOrder?.customerId.toString() ?? '');
+    _customerIdController =
+        TextEditingController(text: widget.initialOrder?.id.toString() ?? '');
     _deliveryDateController = TextEditingController(
         text: widget.initialOrder != null
             ? DateFormat('MM/dd/yyyy')
@@ -209,13 +209,13 @@ class CreateEditFormState extends State<CreateEditForm> {
           child: const Text('Save'),
           onPressed: () {
             final newOrder = PurchaseOrder(
-              id: '',
-              customerId: '',
+              id: widget.initialOrder?.id ?? '',
+              customerId: _customerIdController.text,
               dateOfDelivery:
                   DateFormat('MM/dd/yyyy').parse(_deliveryDateController.text),
               status: _statusController.text,
               amountDue: double.parse(_amountDueController.text),
-              dateCreated: DateTime.now(),
+              dateCreated: widget.initialOrder?.dateCreated ?? DateTime.now(),
               createdBy: widget.initialOrder?.createdBy ?? 'current_user',
               timestamp: DateTime.now(),
               userId: widget.initialOrder?.userId ?? 'user_id',

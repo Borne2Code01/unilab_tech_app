@@ -78,7 +78,7 @@ class DatabaseHelper {
           )
         ''');
       },
-      version: 1,
+      version: 2,
     );
   }
 
@@ -182,12 +182,12 @@ class DatabaseHelper {
       'PurchaseOrders',
       {
         'customerId': purchaseOrder.customerId,
-        'dateOfDelivery': purchaseOrder.dateOfDelivery,
+        'dateOfDelivery': purchaseOrder.dateOfDelivery.toIso8601String(),
         'status': purchaseOrder.status,
         'amountDue': purchaseOrder.amountDue,
-        'dateCreated': purchaseOrder.dateCreated,
+        'dateCreated': purchaseOrder.dateCreated.toIso8601String(),
         'createdBy': purchaseOrder.createdBy,
-        'timestamp': purchaseOrder.timestamp,
+        'timestamp': purchaseOrder.timestamp.toIso8601String(),
         'userId': purchaseOrder.userId,
         'isActive': purchaseOrder.isActive ? 1 : 0,
       },

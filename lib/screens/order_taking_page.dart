@@ -4,7 +4,7 @@ import 'package:unilab_order_01/models/customer.dart';
 import 'package:unilab_order_01/models/purchase_order.dart';
 import 'package:unilab_order_01/models/sku.dart';
 import 'package:unilab_order_01/services/database_helper.dart';
-import 'package:uuid/uuid.dart';
+import 'package:shortid/shortid.dart';
 
 class OrderTakingPage extends StatefulWidget {
   const OrderTakingPage({super.key});
@@ -216,7 +216,7 @@ class OrderTakingPageState extends State<OrderTakingPage> {
 
     if (existingCustomer.fullName.isEmpty) {
       existingCustomer = Customer(
-        id: const Uuid().v4(), // Generate a unique ID
+        id: shortid.generate(), // Generate a unique ID
         mobileNumber: '',
         city: '',
         isActive: true,
@@ -257,7 +257,7 @@ class OrderTakingPageState extends State<OrderTakingPage> {
     }
 
     final newOrder = PurchaseOrder(
-      id: const Uuid().v4(), // Generate a unique ID
+      id: shortid.generate(), // Generate a unique ID
       customerId: _selectedCustomer?.id ?? '',
       dateOfDelivery: _selectedDate,
       status: _status,
@@ -443,41 +443,40 @@ class OrderTakingPageState extends State<OrderTakingPage> {
                 'Saved Orders',
                 style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
               ),
-              Column(
-                children: [
-                  ListView(
-                    shrinkWrap: true,
-                    children: _savedOrders.map((order) {
-                      final customer = _customers.firstWhere(
-                        (customer) => customer.id == order.customerId,
-                        orElse: () => Customer(
-                          id: '',
-                          mobileNumber: '',
-                          city: '',
-                          isActive: false,
-                          firstName: '',
-                          lastName: '',
-                          fullName: 'Unknown',
-                          dateCreated: '',
-                          createdBy: '',
-                          timestamp: '',
-                          userId: '',
-                        ),
-                      );
+              SizedBox(
+                height: 444,
+                child: ListView(
+                  shrinkWrap: true,
+                  children: _savedOrders.map((order) {
+                    final customer = _customers.firstWhere(
+                      (customer) => customer.id == order.customerId,
+                      orElse: () => Customer(
+                        id: '',
+                        mobileNumber: '',
+                        city: '',
+                        isActive: false,
+                        firstName: '',
+                        lastName: '',
+                        fullName: 'Unknown',
+                        dateCreated: '',
+                        createdBy: '',
+                        timestamp: '',
+                        userId: '',
+                      ),
+                    );
 
-                      return Column(
-                        children: [
-                          ListTile(
-                            title: Text('Order #${order.id}'),
-                            subtitle: Text('Customer: ${customer.fullName}'),
-                            onTap: () => _showOrderDetails(order),
-                          ),
-                          const Divider(color: Colors.grey),
-                        ],
-                      );
-                    }).toList(),
-                  ),
-                ],
+                    return Column(
+                      children: [
+                        ListTile(
+                          title: Text('Order #${order.id}'),
+                          subtitle: Text('Customer: ${customer.fullName}'),
+                          onTap: () => _showOrderDetails(order),
+                        ),
+                        const Divider(color: Colors.grey),
+                      ],
+                    );
+                  }).toList(),
+                ),
               ),
             ],
           ),

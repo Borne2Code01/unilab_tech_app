@@ -58,7 +58,7 @@ class SkuPageState extends State<SkuPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Edit SKU: ${_skus[index].name}'),
+          title: const Text('Edit SKU'),
           content: CreateEditForm(
             initialSku: _skus[index],
             onSave: (Sku updatedSku) async {
