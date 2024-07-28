@@ -154,7 +154,6 @@ class DatabaseHelper {
     return await db.insert(
       'PurchaseOrders',
       {
-        // Omit 'id' since it's auto-incremented
         'customerId': purchaseOrder.customerId,
         'dateOfDelivery': purchaseOrder.dateOfDelivery.toIso8601String(),
         'status': purchaseOrder.status,
@@ -173,7 +172,7 @@ class DatabaseHelper {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query('PurchaseOrders');
     return List.generate(maps.length, (i) {
-      return PurchaseOrder.fromJson(maps[i]);
+      return PurchaseOrder.fromMap(maps[i]);
     });
   }
 
@@ -183,12 +182,12 @@ class DatabaseHelper {
       'PurchaseOrders',
       {
         'customerId': purchaseOrder.customerId,
-        'dateOfDelivery': purchaseOrder.dateOfDelivery.toIso8601String(),
+        'dateOfDelivery': purchaseOrder.dateOfDelivery,
         'status': purchaseOrder.status,
         'amountDue': purchaseOrder.amountDue,
-        'dateCreated': purchaseOrder.dateCreated.toIso8601String(),
+        'dateCreated': purchaseOrder.dateCreated,
         'createdBy': purchaseOrder.createdBy,
-        'timestamp': purchaseOrder.timestamp.toIso8601String(),
+        'timestamp': purchaseOrder.timestamp,
         'userId': purchaseOrder.userId,
         'isActive': purchaseOrder.isActive ? 1 : 0,
       },
@@ -197,7 +196,7 @@ class DatabaseHelper {
     );
   }
 
-  Future<int> deletePurchaseOrder(int id) async {
+  Future<int> deletePurchaseOrder(String id) async {
     final db = await database;
     return await db.delete(
       'PurchaseOrders',

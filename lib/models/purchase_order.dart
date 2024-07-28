@@ -1,17 +1,17 @@
 class PurchaseOrder {
-  final String id;
-  final String customerId;
-  final DateTime dateOfDelivery;
-  final String status;
-  final double amountDue;
-  final DateTime dateCreated;
-  final String createdBy;
-  final DateTime timestamp;
-  final String userId;
-  final bool isActive;
+  String? id;
+  String customerId;
+  DateTime dateOfDelivery;
+  String status;
+  double amountDue;
+  DateTime dateCreated;
+  String createdBy;
+  DateTime timestamp;
+  String userId;
+  bool isActive;
 
   PurchaseOrder({
-    required this.id,
+    this.id,
     required this.customerId,
     required this.dateOfDelivery,
     required this.status,
@@ -23,7 +23,7 @@ class PurchaseOrder {
     required this.isActive,
   });
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toMap() {
     return {
       'id': id,
       'customerId': customerId,
@@ -38,18 +38,18 @@ class PurchaseOrder {
     };
   }
 
-  factory PurchaseOrder.fromJson(Map<String, dynamic> json) {
+  factory PurchaseOrder.fromMap(Map<String, dynamic> map) {
     return PurchaseOrder(
-      id: json['id'],
-      customerId: json['customerId'],
-      dateOfDelivery: DateTime.parse(json['dateOfDelivery']),
-      status: json['status'],
-      amountDue: json['amountDue'],
-      dateCreated: DateTime.parse(json['dateCreated']),
-      createdBy: json['createdBy'],
-      timestamp: DateTime.parse(json['timestamp']),
-      userId: json['userId'],
-      isActive: json['isActive'] == 1,
+      id: map['id'].toString(),
+      customerId: map['customerId'],
+      dateOfDelivery: DateTime.parse(map['dateOfDelivery']),
+      status: map['status'],
+      amountDue: map['amountDue'],
+      dateCreated: DateTime.parse(map['dateCreated']),
+      createdBy: map['createdBy'],
+      timestamp: DateTime.parse(map['timestamp']),
+      userId: map['userId'],
+      isActive: map['isActive'] == 1,
     );
   }
 }

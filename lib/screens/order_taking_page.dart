@@ -6,14 +6,14 @@ import 'package:unilab_order_01/models/sku.dart';
 import 'package:unilab_order_01/services/database_helper.dart';
 import 'package:uuid/uuid.dart';
 
-class OrderDashboardPage extends StatefulWidget {
-  const OrderDashboardPage({super.key});
+class OrderTakingPage extends StatefulWidget {
+  const OrderTakingPage({super.key});
 
   @override
-  OrderDashboardPageState createState() => OrderDashboardPageState();
+  OrderTakingPageState createState() => OrderTakingPageState();
 }
 
-class OrderDashboardPageState extends State<OrderDashboardPage> {
+class OrderTakingPageState extends State<OrderTakingPage> {
   final List<Map<String, dynamic>> _items = [];
   late DatabaseHelper _databaseHelper;
   List<Customer> _customers = [];
@@ -21,6 +21,7 @@ class OrderDashboardPageState extends State<OrderDashboardPage> {
   Customer? _selectedCustomer;
   DateTime _selectedDate = DateTime.now();
   String _status = 'New';
+  TextEditingController _customerController = TextEditingController();
 
   @override
   void initState() {
@@ -195,11 +196,11 @@ class OrderDashboardPageState extends State<OrderDashboardPage> {
     }
   }
 
-  void _addOrUpdateCustomer(String fullname) {
-    final existingCustomer = _customers.firstWhere(
+  Future<void> _addOrUpdateCustomer(String fullname) async {
+    var existingCustomer = _customers.firstWhere(
       (customer) => customer.fullName.toLowerCase() == fullname.toLowerCase(),
       orElse: () => Customer(
-        id: '', // Provide default id
+        id: '', // default id
         mobileNumber: '',
         city: '',
         isActive: false,
@@ -214,32 +215,40 @@ class OrderDashboardPageState extends State<OrderDashboardPage> {
     );
 
     if (existingCustomer.fullName.isEmpty) {
+      existingCustomer = Customer(
+        id: const Uuid().v4(), // Generate a unique ID
+        mobileNumber: '',
+        city: '',
+        isActive: true,
+        firstName: '',
+        lastName: '',
+        fullName: fullname,
+        dateCreated: DateTime.now().toString(),
+        createdBy: '',
+        timestamp: DateTime.now().toString(),
+        userId: '',
+      );
+
+      await _databaseHelper.insertCustomer(existingCustomer);
+
       setState(() {
-        _customers.add(Customer(
-          id: '', // Provide default id
-          mobileNumber: '',
-          city: '',
-          isActive: true,
-          firstName: '',
-          lastName: '',
-          fullName: fullname,
-          dateCreated: '',
-          createdBy: '',
-          timestamp: '',
-          userId: '',
-        ));
-        _selectedCustomer = _customers.last;
-        _status = 'New';
+        _customers.add(existingCustomer);
+        _selectedCustomer = existingCustomer;
       });
     } else {
       setState(() {
         _selectedCustomer = existingCustomer;
-        _status = existingCustomer.isActive ? 'Active' : 'Inactive';
       });
     }
   }
 
   void _saveOrder() async {
+    final customerInput = _customerController.text.trim();
+
+    if (customerInput.isNotEmpty) {
+      await _addOrUpdateCustomer(customerInput);
+    }
+
     if (_selectedCustomer == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select a customer.')),
@@ -279,38 +288,53 @@ class OrderDashboardPageState extends State<OrderDashboardPage> {
 
   void _resetForm() {
     setState(() {
-      _items.clear();
       _selectedCustomer = null;
+      _customerController.clear();
       _selectedDate = DateTime.now();
       _status = 'New';
+      _items.clear();
     });
   }
 
   void _showOrderDetails(PurchaseOrder order) {
+    final customer = _customers.firstWhere(
+      (customer) => customer.id == order.customerId,
+      orElse: () => Customer(
+        id: '',
+        firstName: '',
+        lastName: '',
+        fullName: 'Unknown',
+        mobileNumber: '',
+        city: '',
+        isActive: false,
+        dateCreated: '',
+        createdBy: '',
+        timestamp: '',
+        userId: '',
+      ),
+    );
+
     showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (ctx) {
         return AlertDialog(
-          title: Text('Order #${order.id}'),
+          title: const Text('Order Details'),
           content: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text('Customer: ${customer.fullName}'),
               Text(
-                  'Customer: ${_customers.firstWhere((customer) => customer.id == order.customerId).fullName}'),
-              Text(
-                  'Delivery Date: ${DateFormat('yyyy-MM-dd').format(order.dateOfDelivery)}'),
+                  'Delivery Date: ${DateFormat.yMd().format(order.dateOfDelivery)}'),
               Text('Status: ${order.status}'),
-              Text('Amount Due: ${order.amountDue.toStringAsFixed(2)}'),
-              const SizedBox(height: 16),
-              const Text('Items:'),
-              ..._items
-                  .map((item) => Text(
-                      '${item['name']} - ${item['quantity']} x ${item['price'].toStringAsFixed(2)}'))
-                  .toList(),
+              Text('Total Amount: ${order.amountDue.toStringAsFixed(2)}'),
+              const SizedBox(height: 10),
+              for (var item in _items)
+                Text(
+                    '${item['name']} - Quantity: ${item['quantity']} - Subtotal: ${(item['price'] * item['quantity']).toStringAsFixed(2)}'),
             ],
           ),
-          actions: [
+          actions: <Widget>[
             TextButton(
               child: const Text('Close'),
               onPressed: () {
@@ -326,144 +350,137 @@ class OrderDashboardPageState extends State<OrderDashboardPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
+      body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Autocomplete<Customer>(
-              optionsBuilder: (TextEditingValue textEditingValue) {
-                final filteredText = textEditingValue.text
-                    .replaceAll(RegExp(r'[^a-zA-Z\s]'), '')
-                    .toLowerCase();
-                if (filteredText.isEmpty) {
-                  return [];
-                }
-                return _customers
-                    .where((customer) =>
-                        customer.fullName.toLowerCase().contains(filteredText))
-                    .toList();
-              },
-              displayStringForOption: (Customer customer) => customer.fullName,
-              onSelected: (Customer selectedCustomer) {
-                setState(() {
-                  _selectedCustomer = selectedCustomer;
-                  _status = selectedCustomer.isActive ? 'Active' : 'Inactive';
-                });
-              },
-              fieldViewBuilder: (BuildContext context,
-                  TextEditingController controller,
-                  FocusNode focusNode,
-                  VoidCallback onEditingComplete) {
-                return TextField(
-                  controller: controller,
-                  focusNode: focusNode,
-                  decoration: const InputDecoration(labelText: 'Customer'),
-                  onChanged: (text) {
-                    final filteredText =
-                        text.replaceAll(RegExp(r'[^a-zA-Z\s]'), '');
-                    if (filteredText != text) {
-                      controller.value = controller.value.copyWith(
-                        text: filteredText,
-                        selection: TextSelection.collapsed(
-                            offset: filteredText.length),
+        child: SingleChildScrollView(
+          physics: const NeverScrollableScrollPhysics(),
+          child: Column(
+            children: [
+              Autocomplete<Customer>(
+                optionsBuilder: (TextEditingValue textEditingValue) {
+                  return _customers
+                      .where((customer) => customer.fullName
+                          .toLowerCase()
+                          .contains(textEditingValue.text.toLowerCase()))
+                      .toList();
+                },
+                displayStringForOption: (Customer customer) =>
+                    customer.fullName,
+                onSelected: (Customer selectedCustomer) {
+                  setState(() {
+                    _selectedCustomer = selectedCustomer;
+                  });
+                },
+                fieldViewBuilder: (BuildContext context,
+                    TextEditingController controller,
+                    FocusNode focusNode,
+                    VoidCallback onEditingComplete) {
+                  _customerController = controller;
+                  return TextField(
+                    controller: controller,
+                    focusNode: focusNode,
+                    decoration: const InputDecoration(labelText: 'Customer'),
+                    onSubmitted: (value) {
+                      _addOrUpdateCustomer(value);
+                      onEditingComplete();
+                    },
+                  );
+                },
+              ),
+              const SizedBox(height: 16.0),
+              TextField(
+                decoration: const InputDecoration(labelText: 'Delivery Date'),
+                controller: TextEditingController(
+                    text: DateFormat('yyyy-MM-dd').format(_selectedDate)),
+                readOnly: true,
+                onTap: () => _selectDate(context),
+              ),
+              const SizedBox(height: 16.0),
+              Row(
+                children: [
+                  const Spacer(),
+                  ElevatedButton(
+                    onPressed: () => _openItemModal(),
+                    child: const Text('Add Item'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16.0),
+              ListView.builder(
+                shrinkWrap: true,
+                itemCount: _items.length,
+                itemBuilder: (ctx, index) {
+                  final item = _items[index];
+                  return ListTile(
+                    title: Text(item['name']),
+                    subtitle: Text('Quantity: ${item['quantity']}'),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.edit),
+                      onPressed: () => _openItemModal(item: item),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 16.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Total: ${_totalPrice.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: _saveOrder,
+                    child: const Text('Save Order'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16.0),
+              const Text(
+                'Saved Orders',
+                style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+              ),
+              Column(
+                children: [
+                  ListView(
+                    shrinkWrap: true,
+                    children: _savedOrders.map((order) {
+                      final customer = _customers.firstWhere(
+                        (customer) => customer.id == order.customerId,
+                        orElse: () => Customer(
+                          id: '',
+                          mobileNumber: '',
+                          city: '',
+                          isActive: false,
+                          firstName: '',
+                          lastName: '',
+                          fullName: 'Unknown',
+                          dateCreated: '',
+                          createdBy: '',
+                          timestamp: '',
+                          userId: '',
+                        ),
                       );
-                    }
-                    setState(() {
-                      _addOrUpdateCustomer(filteredText);
-                    });
-                  },
-                );
-              },
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              decoration: const InputDecoration(labelText: 'Delivery Date'),
-              controller: TextEditingController(
-                  text: DateFormat('yyyy-MM-dd').format(_selectedDate)),
-              onTap: () {
-                FocusScope.of(context).requestFocus(FocusNode());
-                _selectDate(context);
-              },
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              decoration: const InputDecoration(labelText: 'Status'),
-              controller: TextEditingController(text: _status),
-              readOnly: true,
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => _openItemModal(),
-              child: const Text('Add Item'),
-            ),
-            const SizedBox(height: 16),
-            ListView.builder(
-              shrinkWrap: true,
-              itemCount: _items.length,
-              itemBuilder: (ctx, index) {
-                final item = _items[index];
-                return ListTile(
-                  title: Text(
-                      '${item['name']} - ${item['quantity']} x ${item['price']}'),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.edit),
-                    onPressed: () => _openItemModal(item: item),
+
+                      return Column(
+                        children: [
+                          ListTile(
+                            title: Text('Order #${order.id}'),
+                            subtitle: Text('Customer: ${customer.fullName}'),
+                            onTap: () => _showOrderDetails(order),
+                          ),
+                          const Divider(color: Colors.grey),
+                        ],
+                      );
+                    }).toList(),
                   ),
-                );
-              },
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Text(
-                  'Total Amount: ${_totalPrice.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(width: 16),
-                ElevatedButton(
-                  onPressed: _saveOrder,
-                  child: const Text('Save Order'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Saved Orders:',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            ListView.builder(
-              shrinkWrap: true,
-              itemCount: _savedOrders.length,
-              itemBuilder: (ctx, index) {
-                final order = _savedOrders[index];
-                final customer = _customers.firstWhere(
-                  (customer) => customer.id == order.customerId,
-                  orElse: () => Customer(
-                    id: '', // Provide a default value or handle accordingly
-                    firstName: '',
-                    lastName: '',
-                    fullName: 'Unknown', // Handle unknown or missing customer
-                    mobileNumber: '',
-                    city: '',
-                    dateCreated: '',
-                    createdBy: '',
-                    timestamp: '',
-                    userId: '',
-                    isActive: false,
-                  ),
-                );
-                return ListTile(
-                  title: Text('Order #${order.id}'),
-                  subtitle: Text(
-                    'Customer: ${customer.fullName} - Amount Due: ${order.amountDue.toStringAsFixed(2)}',
-                  ),
-                  onTap: () => _showOrderDetails(order),
-                );
-              },
-            )
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

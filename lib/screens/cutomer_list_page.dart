@@ -38,7 +38,7 @@ class CustomerPageState extends State<CustomerPage> {
           content: CreateEditForm(
             onSave: (Customer newCustomer) async {
               await _databaseHelper.insertCustomer(newCustomer);
-              _loadCustomers(); // Reload customers after insertion
+              _loadCustomers();
               Navigator.of(context).pop();
             },
           ),
@@ -65,7 +65,7 @@ class CustomerPageState extends State<CustomerPage> {
             initialCustomer: _customers[index],
             onSave: (Customer updatedCustomer) async {
               await _databaseHelper.updateCustomer(updatedCustomer);
-              _loadCustomers(); // Reload customers after update
+              _loadCustomers();
               Navigator.of(context).pop();
             },
           ),
@@ -84,7 +84,7 @@ class CustomerPageState extends State<CustomerPage> {
 
   void _deleteCustomer(int index) async {
     await _databaseHelper.deleteCustomer(_customers[index].id);
-    _loadCustomers(); // Reload customers after deletion
+    _loadCustomers();
   }
 
   @override
@@ -234,12 +234,12 @@ class CreateEditFormState extends State<CreateEditForm> {
               mobileNumber: _mobileNumberController.text,
               city: _cityController.text,
               dateCreated: '',
-              createdBy: 'current_user', // Replace with actual user ID or name
+              createdBy: 'current_user',
               timestamp: '',
-              userId: 'user_id', // Replace with actual user ID
+              userId: 'user_id',
               isActive: _isActive,
-              firstName: _fullnameController.value.toString(),
-              lastName: _fullnameController.value.toString(),
+              firstName: '',
+              lastName: '',
             );
             widget.onSave(newCustomer);
           },
