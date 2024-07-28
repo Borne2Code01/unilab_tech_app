@@ -23,8 +23,8 @@ class PurchaseOrderProvider with ChangeNotifier {
   }
 
   Future<void> deletePurchaseOrder(String id) async {
-    int intId = int.parse(id); // Convert the String to int
-    await DatabaseHelper().deletePurchaseOrder(intId);
+    int intId = int.parse(id);
+    await DatabaseHelper().deletePurchaseOrder(intId.toString());
     await fetchPurchaseOrders();
   }
 }

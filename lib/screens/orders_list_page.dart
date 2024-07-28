@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:unilab_order_01/main.dart';
+import '../services/database_helper.dart';
+import '../models/purchase_order.dart';
 
 class OrderPage extends StatefulWidget {
   const OrderPage({super.key});
@@ -9,53 +12,42 @@ class OrderPage extends StatefulWidget {
 }
 
 class OrderPageState extends State<OrderPage> {
-  final List<Order> _orders = [
-    Order(
-        customer: 'Riza, Jose',
-        deliveryDate: DateTime(2020, 4, 14),
-        status: 'New',
-        amountDue: 3400),
-    Order(
-        customer: 'Jhonson, Edward',
-        deliveryDate: DateTime(2020, 4, 20),
-        status: 'New',
-        amountDue: 3500),
-    Order(
-        customer: 'Garcia, Philip',
-        deliveryDate: DateTime(2020, 3, 10),
-        status: 'Completed',
-        amountDue: 10280),
-    Order(
-        customer: 'Riza, Jose',
-        deliveryDate: DateTime(2021, 2, 1),
-        status: 'New',
-        amountDue: 1500),
-    Order(
-        customer: 'Riza, Jose',
-        deliveryDate: DateTime(2021, 2, 1),
-        status: 'New',
-        amountDue: 500),
-  ];
+  late DatabaseHelper _databaseHelper;
+  List<PurchaseOrder> _orders = [];
 
-  void _showCreateModal() {
+  @override
+  void initState() {
+    super.initState();
+    _databaseHelper = DatabaseHelper();
+    _loadOrders();
+  }
+
+  Future<void> _loadOrders() async {
+    final orders = await _databaseHelper.getPurchaseOrders();
+    setState(() {
+      _orders = orders;
+    });
+  }
+
+  void _showEditModal(int index) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Create New Order'),
+          title: Text('Edit Order: ${_orders[index].customerId}'),
           content: CreateEditForm(
-            onSave: (Order newOrder) {
-              setState(() {
-                _orders.add(newOrder);
-              });
-              Navigator.of(context).pop(); // Close the dialog
+            initialOrder: _orders[index],
+            onSave: (PurchaseOrder updatedOrder) async {
+              await _databaseHelper.updatePurchaseOrder(updatedOrder);
+              _loadOrders();
+              Navigator.of(context).pop();
             },
           ),
           actions: <Widget>[
             TextButton(
               child: const Text('Cancel'),
               onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
+                Navigator.of(context).pop();
               },
             ),
           ],
@@ -64,32 +56,9 @@ class OrderPageState extends State<OrderPage> {
     );
   }
 
-  void _showEditModal(int index) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Edit Order: ${_orders[index].customer}'),
-          content: CreateEditForm(
-            initialOrder: _orders[index],
-            onSave: (Order updatedOrder) {
-              setState(() {
-                _orders[index] = updatedOrder;
-              });
-              Navigator.of(context).pop(); // Close the dialog
-            },
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-              },
-            ),
-          ],
-        );
-      },
-    );
+  void _deleteOrder(int index) async {
+    await _databaseHelper.deletePurchaseOrder(_orders[index].id.toString());
+    _loadOrders();
   }
 
   @override
@@ -104,7 +73,12 @@ class OrderPageState extends State<OrderPage> {
           child: Column(
             children: [
               ElevatedButton(
-                onPressed: _showCreateModal,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const HomePage()),
+                  );
+                },
                 child: const Text('Create New'),
               ),
               const SizedBox(height: 16),
@@ -120,16 +94,25 @@ class OrderPageState extends State<OrderPage> {
                   ],
                   rows: _orders.map((order) {
                     return DataRow(cells: <DataCell>[
-                      DataCell(Text(order.customer)),
-                      DataCell(Text(
-                          DateFormat('MM/dd/yyyy').format(order.deliveryDate))),
+                      DataCell(Text(order.customerId.toString())),
+                      DataCell(Text(DateFormat('MM/dd/yyyy')
+                          .format(order.dateOfDelivery))),
                       DataCell(Text(order.status)),
                       DataCell(Text(order.amountDue.toString())),
                       DataCell(
-                        TextButton(
-                          child: const Text('Edit'),
-                          onPressed: () =>
-                              _showEditModal(_orders.indexOf(order)),
+                        Row(
+                          children: [
+                            TextButton(
+                              child: const Text('Edit'),
+                              onPressed: () =>
+                                  _showEditModal(_orders.indexOf(order)),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete),
+                              onPressed: () =>
+                                  _deleteOrder(_orders.indexOf(order)),
+                            ),
+                          ],
                         ),
                       ),
                     ]);
@@ -145,8 +128,8 @@ class OrderPageState extends State<OrderPage> {
 }
 
 class CreateEditForm extends StatefulWidget {
-  final Order? initialOrder;
-  final Function(Order) onSave;
+  final PurchaseOrder? initialOrder;
+  final Function(PurchaseOrder) onSave;
 
   const CreateEditForm({super.key, this.initialOrder, required this.onSave});
 
@@ -155,7 +138,7 @@ class CreateEditForm extends StatefulWidget {
 }
 
 class CreateEditFormState extends State<CreateEditForm> {
-  late TextEditingController _customerController;
+  late TextEditingController _customerIdController;
   late TextEditingController _deliveryDateController;
   late TextEditingController _statusController;
   late TextEditingController _amountDueController;
@@ -163,11 +146,12 @@ class CreateEditFormState extends State<CreateEditForm> {
   @override
   void initState() {
     super.initState();
-    _customerController =
-        TextEditingController(text: widget.initialOrder?.customer ?? '');
+    _customerIdController = TextEditingController(
+        text: widget.initialOrder?.customerId.toString() ?? '');
     _deliveryDateController = TextEditingController(
         text: widget.initialOrder != null
-            ? DateFormat('MM/dd/yyyy').format(widget.initialOrder!.deliveryDate)
+            ? DateFormat('MM/dd/yyyy')
+                .format(widget.initialOrder!.dateOfDelivery)
             : '');
     _statusController =
         TextEditingController(text: widget.initialOrder?.status ?? '');
@@ -177,7 +161,7 @@ class CreateEditFormState extends State<CreateEditForm> {
 
   @override
   void dispose() {
-    _customerController.dispose();
+    _customerIdController.dispose();
     _deliveryDateController.dispose();
     _statusController.dispose();
     _amountDueController.dispose();
@@ -190,7 +174,7 @@ class CreateEditFormState extends State<CreateEditForm> {
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
         TextField(
-          controller: _customerController,
+          controller: _customerIdController,
           decoration: const InputDecoration(labelText: 'Customer'),
         ),
         TextField(
@@ -224,12 +208,18 @@ class CreateEditFormState extends State<CreateEditForm> {
         ElevatedButton(
           child: const Text('Save'),
           onPressed: () {
-            final newOrder = Order(
-              customer: _customerController.text,
-              deliveryDate:
+            final newOrder = PurchaseOrder(
+              id: '',
+              customerId: '',
+              dateOfDelivery:
                   DateFormat('MM/dd/yyyy').parse(_deliveryDateController.text),
               status: _statusController.text,
               amountDue: double.parse(_amountDueController.text),
+              dateCreated: DateTime.now(),
+              createdBy: widget.initialOrder?.createdBy ?? 'current_user',
+              timestamp: DateTime.now(),
+              userId: widget.initialOrder?.userId ?? 'user_id',
+              isActive: widget.initialOrder?.isActive ?? true,
             );
             widget.onSave(newOrder);
           },
@@ -237,18 +227,4 @@ class CreateEditFormState extends State<CreateEditForm> {
       ],
     );
   }
-}
-
-class Order {
-  final String customer;
-  final DateTime deliveryDate;
-  final String status;
-  final double amountDue;
-
-  Order({
-    required this.customer,
-    required this.deliveryDate,
-    required this.status,
-    required this.amountDue,
-  });
 }

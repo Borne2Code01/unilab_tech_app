@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:unilab_order_01/screens/cutomer_page.dart';
+import 'package:unilab_order_01/screens/cutomer_list_page.dart';
 import 'package:unilab_order_01/services/database_helper.dart';
 import 'providers/customer_provider.dart';
 import 'providers/purchase_order_provider.dart';
 import 'providers/purchase_item_provider.dart';
 import 'providers/sku_provider.dart';
 import 'screens/order_taking_page.dart';
-import 'screens/orders_page.dart';
+import 'screens/orders_list_page.dart';
 import 'screens/sku_page.dart';
 
 void main() async {
@@ -53,19 +53,21 @@ class HomePage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Order Taking'),
       ),
-      body: ListView(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Row(
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   ElevatedButton(
                     onPressed: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => const CustomerPage()),
+                          builder: (context) => const CustomerPage(),
+                        ),
                       );
                     },
                     child: const Text('Customers'),
@@ -76,7 +78,8 @@ class HomePage extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => const SkuPage()),
+                          builder: (context) => const SkuPage(),
+                        ),
                       );
                     },
                     child: const Text('SKU'),
@@ -87,25 +90,22 @@ class HomePage extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => const OrderPage()),
+                          builder: (context) => const OrderPage(),
+                        ),
                       );
                     },
                     child: const Text('Orders'),
                   ),
                 ],
               ),
-            ],
-          ),
-          Column(
-            children: [
-              SizedBox(
-                height: MediaQuery.of(context).size.height,
-                width: MediaQuery.of(context).size.width,
-                child: const OrderDashboardPage(),
-              )
-            ],
-          )
-        ],
+            ),
+            SizedBox(
+              height: MediaQuery.of(context).size.height,
+              width: MediaQuery.of(context).size.width,
+              child: const OrderTakingPage(),
+            )
+          ],
+        ),
       ),
     );
   }
