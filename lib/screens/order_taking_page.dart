@@ -129,7 +129,7 @@ class OrderTakingPageState extends State<OrderTakingPage> {
                     final selectedSku = _skus.firstWhere(
                         (sku) => sku.name == skuController.text,
                         orElse: () => Sku(
-                            id: 001, // Add default id
+                            id: shortid.generate(),
                             name: '',
                             unitPrice: 0.0,
                             code: '',
@@ -159,7 +159,7 @@ class OrderTakingPageState extends State<OrderTakingPage> {
               final selectedSku = _skus.firstWhere(
                   (sku) => sku.name == skuController.text,
                   orElse: () => Sku(
-                      id: 001,
+                      id: shortid.generate(),
                       name: '',
                       unitPrice: 0.0,
                       code: '',
@@ -203,7 +203,7 @@ class OrderTakingPageState extends State<OrderTakingPage> {
     var existingCustomer = _customers.firstWhere(
       (customer) => customer.fullName.toLowerCase() == fullname.toLowerCase(),
       orElse: () => Customer(
-        id: '', // default id
+        id: shortid.generate(), // default id
         mobileNumber: '',
         city: '',
         isActive: false,

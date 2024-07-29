@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shortid/shortid.dart';
 import 'package:unilab_order_01/models/sku.dart';
 import '../services/database_helper.dart';
 
@@ -25,6 +26,11 @@ class SkuPageState extends State<SkuPage> {
     setState(() {
       _skus = skus;
     });
+  }
+
+  void _deleteSku(String id) async {
+    await _databaseHelper.deleteSKU(id);
+    _loadSkus();
   }
 
   void _showCreateModal(BuildContext context) {
@@ -62,7 +68,17 @@ class SkuPageState extends State<SkuPage> {
           content: CreateEditForm(
             initialSku: _skus[index],
             onSave: (Sku updatedSku) async {
+              updatedSku = Sku(
+                id: _skus[index].id,
+                name: updatedSku.name,
+                code: updatedSku.code,
+                unitPrice: updatedSku.unitPrice,
+                isActive: updatedSku.isActive,
+              );
               await _databaseHelper.updateSKU(updatedSku);
+              setState(() {
+                _skus[index] = updatedSku;
+              });
               _loadSkus();
               Navigator.of(context).pop();
             },
@@ -122,10 +138,20 @@ class SkuPageState extends State<SkuPage> {
                         ),
                       ),
                       DataCell(
-                        TextButton(
-                          child: const Text('Edit'),
-                          onPressed: () =>
-                              _showEditModal(context, _skus.indexOf(sku)),
+                        Row(
+                          children: [
+                            TextButton(
+                              child: const Text('Edit'),
+                              onPressed: () =>
+                                  _showEditModal(context, _skus.indexOf(sku)),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete),
+                              onPressed: () {
+                                _deleteSku(sku.id);
+                              },
+                            )
+                          ],
                         ),
                       ),
                     ]);
@@ -164,6 +190,7 @@ class CreateEditFormState extends State<CreateEditForm> {
     _unitPriceController =
         TextEditingController(text: widget.initialSku?.unitPrice.toString());
     _isActive = widget.initialSku?.isActive ?? true;
+    print('Initial SKU: ${widget.initialSku}');
   }
 
   @override
@@ -211,11 +238,14 @@ class CreateEditFormState extends State<CreateEditForm> {
           child: const Text('Save'),
           onPressed: () {
             final newSku = Sku(
+              id: widget.initialSku?.id ?? shortid.generate(),
               name: _nameController.text,
               code: _codeController.text,
               unitPrice: double.parse(_unitPriceController.text),
               isActive: _isActive,
             );
+            print(
+                'Form SKU: ${newSku.id}, ${newSku.name}, ${newSku.code}, ${newSku.unitPrice}, ${newSku.isActive}');
             widget.onSave(newSku);
           },
         ),

@@ -1,19 +1,19 @@
 class Sku {
-  final int? id;
+  final String id;
   final String name;
   final String code;
   final double unitPrice;
   final bool isActive;
 
   Sku({
-    this.id,
+    required this.id,
     required this.name,
     required this.code,
     required this.unitPrice,
     required this.isActive,
   });
 
-  Map<String, dynamic> toMap() {
+  Map<String, dynamic> toJson() {
     return {
       'id': id,
       'name': name,
@@ -23,13 +23,13 @@ class Sku {
     };
   }
 
-  factory Sku.fromMap(Map<String, dynamic> map) {
+  factory Sku.fromJson(Map<String, dynamic> json) {
     return Sku(
-      id: map['id'],
-      name: map['name'],
-      code: map['code'],
-      unitPrice: map['unitPrice'],
-      isActive: map['isActive'] == 1,
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      code: json['code'] ?? '',
+      unitPrice: json['unitPrice'],
+      isActive: json['isActive'] == 1,
     );
   }
 }

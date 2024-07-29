@@ -78,21 +78,21 @@ class DatabaseHelper {
           )
         ''');
       },
-      version: 2,
+      version: 3,
     );
   }
 
   // SKU methods
   Future<int> insertSKU(Sku sku) async {
     final db = await database;
-    return await db.insert('SKUs', sku.toMap());
+    return await db.insert('SKUs', sku.toJson());
   }
 
   Future<List<Sku>> getSKUs() async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query('SKUs');
     return List.generate(maps.length, (i) {
-      return Sku.fromMap(maps[i]);
+      return Sku.fromJson(maps[i]);
     });
   }
 
@@ -100,7 +100,7 @@ class DatabaseHelper {
     final db = await database;
     return await db.update(
       'SKUs',
-      sku.toMap(),
+      sku.toJson(),
       where: 'id = ?',
       whereArgs: [sku.id],
     );
