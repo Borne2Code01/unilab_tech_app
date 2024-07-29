@@ -190,7 +190,7 @@ class CreateEditFormState extends State<CreateEditForm> {
     _unitPriceController =
         TextEditingController(text: widget.initialSku?.unitPrice.toString());
     _isActive = widget.initialSku?.isActive ?? true;
-    print('Initial SKU: ${widget.initialSku}');
+    // print('Initial SKU: ${widget.initialSku}');
   }
 
   @override
@@ -244,8 +244,8 @@ class CreateEditFormState extends State<CreateEditForm> {
               unitPrice: double.parse(_unitPriceController.text),
               isActive: _isActive,
             );
-            print(
-                'Form SKU: ${newSku.id}, ${newSku.name}, ${newSku.code}, ${newSku.unitPrice}, ${newSku.isActive}');
+            // print(
+            //   'Form SKU: ${newSku.id}, ${newSku.name}, ${newSku.code}, ${newSku.unitPrice}, ${newSku.isActive}');
             widget.onSave(newSku);
           },
         ),

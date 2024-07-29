@@ -1,0 +1,140 @@
+{
+    "database": {
+      "name": "crud_system.db",
+      "version": 4,
+      "tables": {
+        "SKUs": {
+          "columns": {
+            "id": "TEXT PRIMARY KEY",
+            "name": "TEXT",
+            "code": "TEXT",
+            "unitPrice": "REAL",
+            "dateCreated": "TEXT",
+            "createdBy": "TEXT",
+            "timestamp": "TEXT",
+            "userId": "TEXT",
+            "isActive": "INTEGER"
+          }
+        },
+        "Customers": {
+          "columns": {
+            "id": "TEXT PRIMARY KEY",
+            "firstName": "TEXT",
+            "lastName": "TEXT",
+            "fullName": "TEXT",
+            "mobileNumber": "TEXT",
+            "city": "TEXT",
+            "dateCreated": "TEXT",
+            "createdBy": "TEXT",
+            "timestamp": "TEXT",
+            "userId": "TEXT",
+            "isActive": "INTEGER"
+          }
+        },
+        "PurchaseOrders": {
+          "columns": {
+            "id": "INTEGER PRIMARY KEY AUTOINCREMENT",
+            "customerId": "TEXT",
+            "dateOfDelivery": "TEXT",
+            "status": "TEXT",
+            "amountDue": "REAL",
+            "dateCreated": "TEXT",
+            "createdBy": "TEXT",
+            "timestamp": "TEXT",
+            "userId": "TEXT",
+            "isActive": "INTEGER"
+          }
+        },
+        "PurchaseItems": {
+          "columns": {
+            "id": "TEXT PRIMARY KEY",
+            "purchaseOrderId": "TEXT",
+            "skuId": "TEXT",
+            "quantity": "INTEGER",
+            "price": "REAL",
+            "timestamp": "TEXT",
+            "userId": "TEXT"
+          }
+        }
+      }
+    },
+    "methods": {
+      "SKU": {
+        "insertSKU": {
+          "input": "Sku",
+          "output": "int"
+        },
+        "getSKUs": {
+          "input": null,
+          "output": "List<Sku>"
+        },
+        "updateSKU": {
+          "input": "Sku",
+          "output": "int"
+        },
+        "deleteSKU": {
+          "input": "String",
+          "output": "int"
+        }
+      },
+      "Customer": {
+        "insertCustomer": {
+          "input": "Customer",
+          "output": "int"
+        },
+        "getCustomers": {
+          "input": null,
+          "output": "List<Customer>"
+        },
+        "updateCustomer": {
+          "input": "Customer",
+          "output": "int"
+        },
+        "deleteCustomer": {
+          "input": "String",
+          "output": "int"
+        }
+      },
+      "PurchaseOrder": {
+        "insertPurchaseOrder": {
+          "input": "PurchaseOrder",
+          "output": "int"
+        },
+        "getPurchaseOrders": {
+          "input": null,
+          "output": "List<PurchaseOrder>"
+        },
+        "updatePurchaseOrder": {
+          "input": "PurchaseOrder",
+          "output": "int"
+        },
+        "deletePurchaseOrder": {
+          "input": "String",
+          "output": "int"
+        }
+      },
+      "PurchaseItem": {
+        "insertPurchaseItem": {
+          "input": "PurchaseItem",
+          "output": "int"
+        },
+        "getPurchaseItems": {
+          "input": null,
+          "output": "List<PurchaseItem>"
+        },
+        "updatePurchaseItem": {
+          "input": "PurchaseItem",
+          "output": "int"
+        },
+        "deletePurchaseItem": {
+          "input": "String",
+          "output": "int"
+        }
+      },
+      "getDatabasePath": {
+        "input": null,
+        "output": "String"
+      }
+    }
+  }
+  

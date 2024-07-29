@@ -22,6 +22,7 @@ class DatabaseHelper {
   Future<Database> _initDatabase() async {
     String path = join(await getDatabasesPath(), 'crud_system.db');
     return openDatabase(
+      readOnly: false,
       path,
       onCreate: (db, version) async {
         await db.execute('''
@@ -78,7 +79,7 @@ class DatabaseHelper {
           )
         ''');
       },
-      version: 3,
+      version: 4,
     );
   }
 
